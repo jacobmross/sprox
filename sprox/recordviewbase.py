@@ -1,7 +1,11 @@
-from .viewbase import ViewBase
-from .metadata import FieldsMetadata
-from .widgetselector import RecordViewWidgetSelector
-from .widgets import RecordViewWidget
+# -*- coding: utf-8 -*-
+# sprox.recordviewbase.py
+
+from sprox.viewbase import ViewBase
+from sprox.metadata import FieldsMetadata
+from sprox.widgetselector import RecordViewWidgetSelector
+from sprox.widgets import RecordViewWidget
+
 
 class RecordViewBase(ViewBase):
     """This class allows you to create a view for a single record.
@@ -94,16 +98,16 @@ class RecordViewBase(ViewBase):
 
     """
 
-
-    __metadata_type__         = FieldsMetadata
-    __widget_selector_type__  = RecordViewWidgetSelector
-    __base_widget_type__      = RecordViewWidget
+    __metadata_type__ = FieldsMetadata
+    __widget_selector_type__ = RecordViewWidgetSelector
+    __base_widget_type__ = RecordViewWidget
 
     def _do_get_field_widget_args(self, field_name, field):
         """Override this method do define how this class gets the field
         widget arguemnts
         """
-        args = super(RecordViewBase, self)._do_get_field_widget_args( field_name, field)
+        args = super(RecordViewBase, self)._do_get_field_widget_args(
+            field_name, field)
         args['field_name'] = field_name
         if self.__provider__.is_relation(self.__entity__, field_name):
             args['entity'] = self.__entity__

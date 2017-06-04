@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.mg.widgetselecter.py
+
 """
 widgetselecter Module
 
@@ -27,14 +30,15 @@ from sprox.widgets import *
 from ming import schema as S
 try:
     from ming.odm.property import RelationProperty, ManyToOneJoin, OneToManyJoin
-except ImportError: #pragma: no cover
+except ImportError:  # pragma: no cover
     from ming.orm.property import RelationProperty, ManyToOneJoin, OneToManyJoin
 
 try:
     from ming.odm.property import ManyToManyListJoin
-except: #pragma: no cover
+except ImportError:  # pragma: no cover
     class ManyToManyListJoin:
         pass
+
 
 class MingWidgetSelector(WidgetSelector):
 
@@ -53,7 +57,7 @@ class MingWidgetSelector(WidgetSelector):
         S.ObjectId: TextField
     }
 
-    def select(self,field):
+    def select(self, field):
         if hasattr(field, 'name') and field.name:
             if field.name in self.default_name_based_widgets:
                 return self.default_name_based_widgets[field.name]
@@ -67,15 +71,16 @@ class MingWidgetSelector(WidgetSelector):
                 return self.default_single_select_field_widget_type
             if isinstance(join, (OneToManyJoin, ManyToManyListJoin)):
                 return self.default_multiple_select_field_widget_type
-            raise NotImplementedError("Unknown join type %r" % join)	# pragma: no cover
-        
+            raise NotImplementedError(
+                "Unknown join type %r" % join)  # pragma: no cover
+
         f = getattr(field, 'field', None)
         if f is not None:
             schemaitem = S.SchemaItem.make(field.field.type)
             if isinstance(schemaitem, S.OneOf):
                 return self.default_single_select_field_widget_type
         else:
-            return TextField 
+            return TextField
 
         # I don't think this works in the latest ming
         sprox_meta = getattr(field, "sprox_meta", {})
@@ -92,4 +97,3 @@ class MingWidgetSelector(WidgetSelector):
             return SubDocumentsList
 
         return self.default_widgets.get(schemaitem.__class__, TextField)
-

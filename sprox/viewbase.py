@@ -1,34 +1,43 @@
+# -*- coding: utf-8 -*-
+# sprox.viewbase.py
+
 import inspect
 from sprox.util import name2label, is_widget, is_widget_class
+from sprox.widgets import Widget, Deferred, WidgetMeta, HiddenField
 
-try: #pragma: no cover
-    from tw2.core import Widget, Deferred
-    from tw2.core.widgets import WidgetMeta
-    from tw2.forms import HiddenField
-except ImportError: #pragma: no cover
-    from tw.api import Widget
-    from tw.forms import HiddenField
-    class WidgetMeta(object):
-        """TW2 WidgetMetaClass"""
+# try:  # pragma: no cover
+#     from tw2.core import Widget, Deferred
+#     from tw2.core.widgets import WidgetMeta
+#     from tw2.forms import HiddenField
+# except ImportError:  # pragma: no cover
+#     from tw.api import Widget
+#     from tw.forms import HiddenField
 
-from .configbase import ConfigBase, ConfigBaseError
+#     class WidgetMeta(object):
+#         """TW2 WidgetMetaClass"""
 
-from .widgetselector import WidgetSelector
+from sprox.configbase import ConfigBase, ConfigBaseError
 
-#sa 0.5 support
-try:  #pragma:no cover
+from sprox.widgetselector import WidgetSelector
+
+# sa 0.5 support
+try:  # pragma: no cover
     from sqlalchemy.types import Enum
-except:  #pragma:no cover
+except ImportError:  # pragma: no cover
     class Enum:
         pass
 
+
 class ClassViewer(object):
     """class wrapper to expose items of a class.  Needed to pass classes to TW as params"""
+
     def __init__(self, klass):
         self.__name__ = klass.__name__
-        
 
-class ViewBaseError(Exception):pass
+
+class ViewBaseError(ConfigBaseError):
+    pass
+
 
 class ViewBase(ConfigBase):
     """
@@ -60,17 +69,16 @@ class ViewBase(ConfigBase):
 
     Also, see the :mod:`sprox.configbase` modifiers.
     """
-    __field_widgets__      = None
+    __field_widgets__ = None
     __field_widget_types__ = None
-    __field_widget_args__  = None
+    __field_widget_args__ = None
     __ignore_field_names__ = None
 
-    #object overrides
-    __base_widget_type__       = Widget
-    __base_widget_args__       = None
-    __widget_selector_type__   = WidgetSelector
-    __widget_selector__        = None
-
+    # object overrides
+    __base_widget_type__ = Widget
+    __base_widget_args__ = None
+    __widget_selector_type__ = WidgetSelector
+    __widget_selector__ = None
 
     def _do_init_attrs(self):
         super(ViewBase, self)._do_init_attrs()
@@ -93,7 +101,8 @@ class ViewBase(ConfigBase):
                 value = getattr(self, attr)
                 if is_widget(value):
                     if not getattr(value, 'id', None):
-                        raise ViewBaseError('Widgets must provide an id argument for use as a field within a ViewBase')
+                        raise ViewBaseError(
+                            'Widgets must provide an id argument for use as a field within a ViewBase')
                     self.__add_fields__[attr] = value
                 try:
                     if is_widget_class(value):
@@ -105,10 +114,11 @@ class ViewBase(ConfigBase):
     def __widget__(self):
         widget = getattr(self, '___widget__', None)
         if not widget:
-            self.___widget__ = self.__base_widget_type__(**self.__widget_args__)
+            self.___widget__ = self.__base_widget_type__(
+                **self.__widget_args__)
         return self.___widget__
 
-    #try to act like a widget as much as possible
+    # try to act like a widget as much as possible
     def __call__(self, *args, **kw):
         return self.display(*args, **kw)
 
@@ -130,8 +140,9 @@ class ViewBase(ConfigBase):
             if key not in widget_dict:
                 continue
             value = widget_dict[key]
-            #sometimes a field will have two widgets associated with it (disabled fields)
-            if hasattr(value,'__iter__'):
+            # sometimes a field will have two widgets associated with it
+            # (disabled fields)
+            if hasattr(value, '__iter__'):
                 field_widgets.extend(value)
                 continue
             field_widgets.append(value)
@@ -149,18 +160,20 @@ class ViewBase(ConfigBase):
         norm_field_name = field_name.replace('$', '-').replace('.', '_')
         args = {}
 
-        #this is sort of a hack around TW evaluating _some_ params that are classes.
+        # this is sort of a hack around TW evaluating _some_ params that are
+        # classes.
         entity = field
         if inspect.isclass(field):
             entity = ClassViewer(field)
 
         if hasattr(Widget, 'req'):
-            args.update({'id': 'sx_'+norm_field_name, 'key': norm_field_name})
-        else: #pragma: no cover
+            args.update({'id': 'sx_' + norm_field_name,
+                         'key': norm_field_name})
+        else:  # pragma: no cover
             args.update({'id': norm_field_name, 'name': norm_field_name})
 
         args.update({
-            'identity':self.__entity__.__name__+'_'+norm_field_name,
+            'identity': self.__entity__.__name__ + '_' + norm_field_name,
             'entity': entity,
             'provider': self.__provider__,
             'label': name2label(field_name),
@@ -173,7 +186,7 @@ class ViewBase(ConfigBase):
                     args['value'] = Deferred(field_default_value[1])
                 else:
                     args['value'] = field_default_value[1]
-            else: #pragma: no cover
+            else:  # pragma: no cover
                 args['default'] = field_default_value[1]
 
         if field_name in self.__field_attrs__:
@@ -183,7 +196,8 @@ class ViewBase(ConfigBase):
             # SubFields are only supported on TW2
             args.update(self.__provider__._build_subfields(self, field))
 
-        provider_widget_args = self.__provider__.get_field_provider_specific_widget_args(self, field, field_name)
+        provider_widget_args = self.__provider__.get_field_provider_specific_widget_args(
+            self, field, field_name)
         if provider_widget_args:
             args.update(provider_widget_args)
 
@@ -201,8 +215,9 @@ class ViewBase(ConfigBase):
                 try:
                     field = self.__metadata__[field_name]
                     args = self._do_get_field_widget_args(field_name, field)
-                except KeyError: #pragma: no cover
+                except KeyError:  # pragma: no cover
                     pass
+
                 if field_name in self.__field_widget_args__:
                     args.update(self.__field_widget_args__[field_name])
                 fields[field_name] = HiddenField(**args)
@@ -220,20 +235,24 @@ class ViewBase(ConfigBase):
         field_widget_args = self._do_get_field_widget_args(field_name, field)
 
         if field_name in self._do_get_disabled_fields():
-            # in this case, we display the current field, disabling it, and also add
-            # a hidden field into th emix
+            # in this case, we display the current field, disabling it,
+            #  and also add a hidden field into the mix
             field_widget_args['disabled'] = True
-            field_widget_args['attrs'] = {'disabled':True}
+            field_widget_args['attrs'] = {'disabled': True}
 
             if hasattr(Widget, 'req'):
-                hidden_id='disabled_' + field_name.replace('.','_')
-            else: #pragma: no cover
-                hidden_id=field_name.replace('.','_')
+                hidden_id = 'disabled_' + field_name.replace('.', '_')
+            else:  # pragma: no cover
+                hidden_id = field_name.replace('.', '_')
 
-            return (HiddenField(id=hidden_id, key=field_name,
-                                name=field_name,
-                                identifier=field_name),
-                    field_widget_type(**field_widget_args))
+            return (
+                HiddenField(
+                    id=hidden_id,
+                    key=field_name,
+                    name=field_name,
+                    identifier=field_name),
+                field_widget_type(**field_widget_args)
+            )
         else:
             return field_widget_type(**field_widget_args)
 

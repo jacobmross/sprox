@@ -1,10 +1,75 @@
-try: #pragma: no cover
-    from .tw2widgets.widgets import *
-except ImportError: #pragma: no cover
-    from .tw1widgets.widgets import *
+# -*- coding: utf-8 -*-
+# sprox.widgets
 
-try: #pragma: no cover
-    from tw2.forms import CalendarBase
-except: #pragma: no cover
-    class CalendarBase(object):
-        pass
+from __future__ import (
+    absolute_import,
+    division,
+    print_function,
+    unicode_literals
+)
+
+__all__ = [
+    'HAS_TW2',
+    'Widget',
+    'WidgetMeta',
+    'Deferred',
+    'HiddenField',
+    'TableForm',
+    'Column',
+    'ContainerWidget',
+    'EntityDefWidget',
+    'EntityLabelWidget',
+    'ModelLabelWidget',
+    'PropertyMultipleSelectField',
+    'PropertySingleSelectField',
+    'RecordFieldWidget',
+    'RecordViewWidget',
+    'SproxCalendarDatePicker',
+    'SproxCalendarDateTimePicker',
+    'SproxCheckBox',
+    'SproxDataGrid',
+    'SproxMethodPutHiddenField',
+    'SproxTimePicker',
+    'SubDocument',
+    'TableDefWidget',
+    'TableLabelWidget',
+    'TableWidget',
+    'CalendarBase',  # tw2 only
+    'Label',  # tw2 only
+    'SubDocumentsList',  # tw2 only
+    'PropertyMixin',  # tw1 only
+    'SproxTableForm',  # tw1 only
+]
+
+from sprox.widgets.widgetbase import (
+    HAS_TW2,
+    Widget,
+    WidgetMeta,
+    Deferred,
+    HiddenField,
+    TableForm,
+    Column,
+    ContainerWidget,
+    EntityDefWidget,
+    EntityLabelWidget,
+    ModelLabelWidget,
+    PropertyMultipleSelectField,
+    PropertySingleSelectField,
+    RecordFieldWidget,
+    RecordViewWidget,
+    SproxCalendarDatePicker,
+    SproxCalendarDateTimePicker,
+    SproxCheckBox,
+    SproxDataGrid,
+    SproxMethodPutHiddenField,
+    SproxTimePicker,
+    SubDocument,
+    TableDefWidget,
+    TableLabelWidget,
+    TableWidget,
+    CalendarBase,
+    Label,
+    SubDocumentsList,
+    PropertyMixin,
+    SproxTableForm,
+)

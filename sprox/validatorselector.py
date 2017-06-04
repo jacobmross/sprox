@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+# sprox.validatorselecter.py
+
 """
-validatorselecter Module
+sprox.validatorselecter Module
 
 this contains the class which allows the ViewConfig to select the appropriate validator for the given field
 
@@ -7,8 +10,8 @@ Classes:
 Name                               Description
 ValidatorSelecter                     Parent Class
 SAValidatorSelector                   Selecter Based on sqlalchemy field types
-DatabaseViewValidatorSelector         Database View always selects the same validator
-TableDefValidatorSelector             Table def fields use the same validator
+# DatabaseViewValidatorSelector         Database View always selects the same validator
+# TableDefValidatorSelector             Table def fields use the same validator
 
 Exceptions:
 None
@@ -18,18 +21,55 @@ None
 
 
 Copyright (c) 2007-10 Christopher Perkins
+    2017 Jacob Ross
 Original Version by Christopher Perkins 2007
 Released under MIT license.
 """
-from sprox._validatorselector import ValidatorSelector
-import warnings
 
-try:
-    from .sa.validatorselector import SAValidatorSelector as _SAValidatorSelector
+# from sprox._validatorselector import ValidatorSelector
 
-    class SAValidatorSelector(_SAValidatorSelector):
-        def __init__(self, *args, **kw):
-            warnings.warn('This class has moved to the sprox.sa.validatorselector module.') # pragma: no cover
-            _SAValidatorSelector.__init__(self, *args, **kw) # pragma: no cover
-except ImportError: # pragma: no cover
-    pass # pragma: no cover
+from formencode import Invalid
+from formencode.validators import StringBool, Number, UnicodeString as FEUnicodeString, Email, Int
+from sprox._compat import SAValidatorSelector
+
+try:  # pragma: no cover
+    import tw2.forms
+    from tw2.core.validation import *
+
+    class UnicodeString(FEUnicodeString):
+        outputEncoding = None
+except ImportError:  # pragma: no cover
+    from tw.forms.validators import *
+    DateTimeValidator = DateValidator
+
+
+class ValidatorSelector(object):
+    _name_based_validators = {}
+
+    def __new__(cls, *args, **kw):
+        bases = cls.mro()
+        chained_attrs = ['_name_based_validators']
+        for base in bases:
+            for attr in chained_attrs:
+                if hasattr(base, attr):
+                    current = getattr(cls, attr)
+                    current.update(getattr(base, attr))
+        return object.__new__(cls)
+
+    def __getitem__(self, field):
+        return self.select(field)
+
+    def __init__(self, *args, **kw):
+        pass
+
+    @property
+    def name_based_validators(self):
+        validators = self._do_get_name_based_validators()
+        validators.update(self._name_based_validators)
+        return validators
+
+    def select(self, field):
+        return UnicodeString
+
+    def _do_get_name_based_validators(self):
+        return {}

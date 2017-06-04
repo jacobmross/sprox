@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.mg.validatorselecter.py
+
 """
 validatorselecter Module
 
@@ -24,20 +27,22 @@ from sprox.validatorselector import ValidatorSelector
 from ming import schema as s
 try:
     import ming.odm as o
-except ImportError: #pragma: no cover
+except ImportError:  # pragma: no cover
     import ming.orm as o
 import inspect
 
 from formencode.validators import StringBool, Number, UnicodeString as FEUnicodeString, Email, Int
-try: #pragma: no cover
+try:  # pragma: no cover
     import tw2.forms
     from tw2.core.validation import *
+
     class UnicodeString(FEUnicodeString):
         outputEncoding = None
-except ImportError: #pragma: no cover
+except ImportError:  # pragma: no cover
     from tw.forms.validators import *
     DateTimeValidator = DateValidator
     BoolValidator = StringBool
+
 
 class MingValidatorSelector(ValidatorSelector):
 
@@ -54,7 +59,7 @@ class MingValidatorSelector(ValidatorSelector):
 
     def select(self, field):
 
-        #xxx: make this a "one of" validator
+        # xxx: make this a "one of" validator
         if isinstance(field, o.RelationProperty):
             return UnicodeString
 

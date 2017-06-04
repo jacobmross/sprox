@@ -1,3 +1,9 @@
+0.11.0 (2017/05/29)
+* Modernized lots with `nine`
+* Consolidated some sprawled tw-compat-checking code to a new .widgets.widgetbase.py
+* Fleshed out kajiki templates for tw2
+
+
 0.10.0
 * MongoDB subdocuments and arrays editing support.
 * Dojo and MongoKit support got removed, they have been unmaintained for a long time.

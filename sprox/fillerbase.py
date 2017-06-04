@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.fillerbase.py
+
 """
 fillerbase Module
 
@@ -8,14 +11,17 @@ Original Version by Christopher Perkins 2008
 Released under MIT license.
 """
 
-from .configbase import ConfigBase, ConfigBaseError
-from .metadata import FieldsMetadata
 import inspect
 from datetime import datetime
-from sprox._compat import string_type, byte_string, unicode_text
 from markupsafe import Markup
 
+from sprox.configbase import ConfigBase, ConfigBaseError
+from sprox.metadata import FieldsMetadata
+from sprox._compat import string_type, byte_string, unicode_text
+
+
 encoding = 'utf-8'
+
 
 class FillerBase(ConfigBase):
     """
@@ -48,18 +54,23 @@ class FillerBase(ConfigBase):
             values = {}
         return values
 
+
 class ModelsFiller(FillerBase):
     pass
+
+
 class ModelDefFiller(FillerBase):
     pass
+
 
 class FormFiller(FillerBase):
     __metadata_type__ = FieldsMetadata
 
     def get_value(self, values=None, **kw):
         values = super(FormFiller, self).get_value(values)
-        values['sprox_id'] =  self.__sprox_id__
+        values['sprox_id'] = self.__sprox_id__
         return values
+
 
 class TableFiller(FillerBase):
     """
@@ -136,15 +147,15 @@ class TableFiller(FillerBase):
             self.__possible_field_names__ = self.__possible_field_name_defaults__
 
     def _get_list_data_value(self, field, values):
-        l = []
+        list_ = []
         for value in values:
             if self.__provider__.is_entity(value.__class__):
-                l.append(unicode_text(self._get_relation_value(field, value)))
+                list_.append(unicode_text(self._get_relation_value(field, value)))
             elif self.__provider__.is_subdocument(value):
-                l.append(unicode_text(self._get_relation_value(field, value)))
+                list_.append(unicode_text(self._get_relation_value(field, value)))
             else:
-                l.append(unicode_text(value))
-        return ', '.join(l)
+                list_.append(unicode_text(value))
+        return ', '.join(list_)
 
     def _get_relation_value(self, field, value):
         if isinstance(self.__possible_field_names__, dict) and field in self.__possible_field_names__:
@@ -174,19 +185,24 @@ class TableFiller(FillerBase):
             fields.insert(0, '__actions__')
         return fields
 
-
     def __actions__(self, obj):
         """Override this function to define how action links should be displayed for the given record."""
         primary_fields = self.__provider__.get_primary_fields(self.__entity__)
         pklist = '/'.join(map(lambda x: str(getattr(obj, x)), primary_fields))
-        value = '<div><div>&nbsp;<a href="'+pklist+'/edit" style="text-decoration:none">edit</a>'\
-              '</div><div>'\
-              '<form method="POST" action="'+pklist+'" class="button-to">'\
-            '<input type="hidden" name="_method" value="DELETE" />'\
-            '<input class="delete-button" onclick="return confirm(\'Are you sure?\');" value="delete" type="submit" '\
-            'style="background-color: transparent; float:left; border:0; color: #286571; display: inline; margin: 0; padding: 0;"/>'\
-        '</form>'\
-        '</div></div>'
+        value = ''.join(
+            '<div><div>&nbsp;<a href="',
+            pklist,
+            '/edit" style="text-decoration:none">edit</a>',
+            '</div><div>',
+            '<form method="POST" action="',
+            pklist,
+            '" class="button-to">',
+            '<input type="hidden" name="_method" value="DELETE" />',
+            '<input class="delete-button" onclick="return confirm(\'Are you sure?\');" value="delete" type="submit" ',
+            'style="background-color: transparent; float:left; border:0; color: #286571; display: inline; margin: 0; padding: 0;"/>',
+            '</form>',
+            '</div></div>',
+        )
         return value
 
     def _do_get_provider_count_and_objs(self, **kw):
@@ -195,10 +211,12 @@ class TableFiller(FillerBase):
         order_by = kw.pop('order_by', None)
         desc = kw.pop('desc', False)
         substring_filters = kw.pop('substring_filters', [])
-        count, objs = self.__provider__.query(self.__entity__, limit, offset, self.__limit_fields__,
-                                              order_by, desc, substring_filters=substring_filters,
-                                              filters=kw, search_related=True,
-                                              related_field_names=self.__possible_field_names__)
+        count, objs = self.__provider__.query(
+            self.__entity__,
+            limit, offset, self.__limit_fields__, order_by, desc,
+            substring_filters=substring_filters,
+            filters=kw, search_related=True,
+            related_field_names=self.__possible_field_names__)
         self.__count__ = count
         return count, objs
 
@@ -227,7 +245,7 @@ class TableFiller(FillerBase):
                 field_method = getattr(self, field, None)
                 if inspect.ismethod(field_method):
                     argspec = inspect.getargspec(field_method)
-                    if argspec and (len(argspec[0])-2>=len(kw) or argspec[2]):
+                    if argspec and (len(argspec[0]) - 2 >= len(kw) or argspec[2]):
                         value = getattr(self, field)(obj, **kw)
                     else:
                         value = getattr(self, field)(obj)
@@ -249,6 +267,7 @@ class TableFiller(FillerBase):
                 row[field] = unicode_text(value)
             rows.append(row)
         return rows
+
 
 class EditFormFiller(FormFiller):
     """
@@ -272,6 +291,7 @@ class EditFormFiller(FormFiller):
       'password': '******', 'email_address': u'asdf@asdf.com', 'display_name': u'None'}
 
     """
+
     def get_value(self, values=None, **kw):
         obj = self.__provider__.get_obj(self.__entity__, params=values, fields=self.__fields__)
         values = self.__provider__.dictify(obj, self.__fields__, self.__omit_fields__)
@@ -282,10 +302,13 @@ class EditFormFiller(FormFiller):
                     values[key] = method(obj, **kw)
         return values
 
-class RecordFiller(EditFormFiller):pass
+
+class RecordFiller(EditFormFiller):
+    pass
 
 
 class AddFormFiller(FormFiller):
+
     def get_value(self, values=None, **kw):
         """xxx: get the server/entity defaults."""
         kw = super(AddFormFiller, self).get_value(values, **kw)

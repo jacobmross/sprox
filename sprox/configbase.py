@@ -1,8 +1,15 @@
-from formencode.validators import Validator
-from sprox.providerselector import ProviderTypeSelector
+# -*- coding: utf-8 -*-
+# sprox.configbase.py
+
 import copy
 
-class ConfigBaseError(Exception):pass
+from formencode.validators import Validator
+from sprox.providerselector import ProviderTypeSelector
+
+
+class ConfigBaseError(Exception):
+    pass
+
 
 class ConfigBase(object):
     """
@@ -43,34 +50,36 @@ class ConfigBase(object):
     """
     # what object does will this object use for metadata extraction
     # model and entity are one in the same
-    __model__ = __entity__  = None
+    __model__ = __entity__ = None
 
-    # this is used by catwalk's validate decorator to lookup the sprocket in the cache
-    __sprox_id__    = None
+    # this is used by catwalk's validate decorator to lookup the sprocket in
+    # the cache
+    __sprox_id__ = None
 
-    #How should we select a provider
+    # How should we select a provider
     __provider_type_selector_type__ = ProviderTypeSelector
 
     # field overrides
-    __field_order__        = None
-    __hide_fields__        = None
-    __disable_fields__     = None
-    __omit_fields__        = None
-    __add_fields__         = None
-    __limit_fields__       = None
-    __field_attrs__        = None
-    __metadata_type__      = None
+    __field_order__ = None
+    __hide_fields__ = None
+    __disable_fields__ = None
+    __omit_fields__ = None
+    __add_fields__ = None
+    __limit_fields__ = None
+    __field_attrs__ = None
+    __metadata_type__ = None
 
-    __possible_field_name_defaults__ = ['name', 'title', '_name', 'description', '_description']
+    __possible_field_name_defaults__ = [
+        'name', 'title', '_name', 'description', '_description']
 
     def __init__(self, provider_hint=None, **provider_hints):
 
-        #map __model__ to __entity__, this may be deprecated
+        # map __model__ to __entity__, this may be deprecated
         if self.__entity__ is None and self.__model__ is not None:
             self.__entity__ = self.__model__
 
         self.__provider_type_selector__ = self.__provider_type_selector_type__()
-        self.provider_hint  = provider_hint
+        self.provider_hint = provider_hint
         self.provider_hints = provider_hints
         self._do_init_defaults_from_entity()
         self._do_init_attrs()
@@ -89,7 +98,8 @@ class ConfigBase(object):
     def _do_get_fields(self):
         fields = []
         if self.__field_order__ is not None:
-            #this makes sure all the ordered fields bubble to the start of the list
+            # this makes sure all the ordered fields bubble to the start of the
+            # list
             fields.extend(self.__field_order__)
         if self.__limit_fields__ is not None:
             fields.extend(self.__limit_fields__)
@@ -107,7 +117,7 @@ class ConfigBase(object):
             fields = set(fields)
             field_order = set(self.__field_order__)
             extra_fields = fields.difference(field_order)
-            fields = self.__field_order__+list(extra_fields)
+            fields = self.__field_order__ + list(extra_fields)
 
         for field in self.__omit_fields__:
             while field in fields:
@@ -123,17 +133,25 @@ class ConfigBase(object):
     def __metadata__(self):
         if not hasattr(self, '___metadata__'):
             if self.__metadata_type__ is None:
-                raise ConfigBaseError('You must define a __metadata_type__ attribute for this object')
-            self.___metadata__=self.__metadata_type__(self.__provider__, self.__entity__)
+                raise ConfigBaseError(
+                    'You must define a __metadata_type__ attribute for this object')
+            self.___metadata__ = self.__metadata_type__(
+                self.__provider__,
+                self.__entity__
+            )
         return self.___metadata__
 
     @property
     def __provider__(self):
         if self.__entity__ is None:
-            raise ConfigBaseError('You must define a __entity__ attribute for this object')
-        return self.__provider_type_selector__.get_selector(self.__entity__).get_provider(self.__entity__,
-                                                                                          self.provider_hint,
-                                                                                          **self.provider_hints)
+            raise ConfigBaseError(
+                'You must define a __entity__ attribute for this object')
+        return self.__provider_type_selector__.get_selector(
+            self.__entity__).get_provider(
+            self.__entity__,
+            self.provider_hint,
+            **self.provider_hints
+        )
 
     def _do_init_attrs(self):
         if self.__hide_fields__ is None:
@@ -159,4 +177,4 @@ class ConfigBase(object):
         if sprox_meta:
             for attr, value in list(vars(sprox_meta).items()):
                 if not attr.startswith('_'):
-                    setattr(self, '__'+attr+'__', copy.deepcopy(value))
+                    setattr(self, '__' + attr + '__', copy.deepcopy(value))

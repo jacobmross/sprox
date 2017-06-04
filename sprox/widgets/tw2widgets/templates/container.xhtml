@@ -1,0 +1,5 @@
+<div class="${w.css_class}" py:attrs='w.attrs'>
+<py:for each="child in w.children">
+    ${child.display(displays_on='kajiki', value=w.value, controller=w.controller)}
+</py:for>
+</div>

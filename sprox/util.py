@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.util.py
+
 """
 util Module
 
@@ -6,11 +9,7 @@ this contains the class which allows dbsprockets to interface with sqlalchemy.
 Copyright (c) 2007 Christopher Perkins
 Original Version by Christopher Perkins 2007
 Released under MIT license.
-"""
 
-from copy import deepcopy, copy
-
-"""
 A good portion of this code was lifted from the PyYaml Codebase.
 
 http://pyyaml.org/:
@@ -35,9 +34,17 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 """
 
-import re, datetime
+import re
+import datetime
 
-class ConverterError(Exception):pass
+from copy import deepcopy, copy
+
+from sprox.widgets import Widget, WidgetMeta, HiddenField
+
+
+class ConverterError(Exception):
+    pass
+
 
 timestamp_regexp = re.compile(
         r'''^(?P<year>[0-9][0-9][0-9][0-9])
@@ -51,10 +58,11 @@ timestamp_regexp = re.compile(
             (?:[ \t]*(?P<tz>Z|(?P<tz_sign>[-+])(?P<tz_hour>[0-9][0-9]?)
             (?::(?P<tz_minute>[0-9][0-9]))?))?)?$''', re.X)
 
+
 def timestamp(value):
     match = timestamp_regexp.match(value)
     if match is None:
-        raise ConverterError('Unknown DateTime format, %s try %%Y-%%m-%%d %%h:%%m:%%s.d'%value)
+        raise ConverterError('Unknown DateTime format, %s try %%Y-%%m-%%d %%h:%%m:%%s.d' % value)
     values = match.groupdict()
     year = int(values['year'])
     month = int(values['month'])
@@ -82,6 +90,7 @@ def timestamp(value):
         data -= delta
     return data
 
+
 def name2label(name):
     """
     Took from ToscaWidgets2.
@@ -99,21 +108,25 @@ def name2label(name):
     return ' '.join([s.capitalize() for s in
                      re.findall(r'([A-Z][a-z0-9]+|[a-z0-9]+|[A-Z0-9]+)', name)])
 
-try: #pragma: no cover
-    from tw2.core import Widget
-    from tw2.core.widgets import WidgetMeta
-    from tw2.forms import HiddenField
-except ImportError: #pragma: no cover
-    from tw.api import Widget
-    from tw.forms import HiddenField
-    class WidgetMeta(object):
-        """TW2 WidgetMetaClass"""
+
+# try:  # pragma: no cover
+#     from tw2.core import Widget
+#     from tw2.core.widgets import WidgetMeta
+#     from tw2.forms import HiddenField
+# except ImportError:  # pragma: no cover
+#     from tw.api import Widget
+#     from tw.forms import HiddenField
+
+#     class WidgetMeta(object):
+#         """TW2 WidgetMetaClass"""
+
 
 def is_widget(w):
     if hasattr(w, 'req'):
         return isinstance(w, Widget) or isinstance(w, WidgetMeta) and w.__name__.endswith('_s')
     else:
         return isinstance(w, Widget)
+
 
 def is_widget_class(w):
     if hasattr(w, 'req'):

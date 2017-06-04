@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.saormprovider.py
+
 """
 saprovider Module
 
@@ -20,16 +23,19 @@ Original Version by Christopher Perkins 2007
 Released under MIT license.
 """
 
-from .sa.provider import SAORMProvider as _SAORMProvider, SAORMProviderError as _SAORMProviderError
+from sprox.sa.provider import SAORMProvider as _SAORMProvider, SAORMProviderError as _SAORMProviderError
 import warnings
 
+
 class SAORMProviderError(_SAORMProviderError):
+
     def __init__(self, *args, **kw):
         warnings.warn('This class has moved to the sprox.sa.provider module.')
         _SAORMProviderError.__init__(self, *args, **kw)
 
+
 class SAORMProvider(_SAORMProvider):
+
     def __init__(self, *args, **kw):
         warnings.warn('This class has moved to the sprox.sa.provider module.')
         _SAORMProvider.__init__(self, *args, **kw)
-

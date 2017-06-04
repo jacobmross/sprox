@@ -1,5 +1,8 @@
+# -*- coding: utf-8 -*-
+# sprox.sa.provider.py
+
 """
-saprovider Module
+sprox.sa.provider Module
 
 this contains the class which allows dbsprockets to interface with sqlalchemy.
 
@@ -18,30 +21,35 @@ Copyright (c) 2007 Christopher Perkins
 Original Version by Christopher Perkins 2007
 Released under MIT license.
 """
+
 import inspect
 import re
-from sqlalchemy import and_, or_, DateTime, Date, Interval, Integer, MetaData, desc as _desc, func
-from sqlalchemy import String
-from sqlalchemy.engine import Engine
-from sqlalchemy.orm.session import Session
-from sqlalchemy.orm.scoping import ScopedSession
-from sqlalchemy.orm.query import Query
-from sqlalchemy.orm import Mapper, _mapper_registry, SynonymProperty, object_mapper, class_mapper
-from sqlalchemy.orm.exc import UnmappedClassError, NoResultFound, UnmappedInstanceError
-from sqlalchemy.exc import InvalidRequestError
-from sqlalchemy.schema import Column
-from sprox.sa.support import PropertyLoader, resolve_entity, Binary, LargeBinary
-
-from sprox.iprovider import IProvider
 from cgi import FieldStorage
 from datetime import datetime, date, timedelta
 from warnings import warn
 
-from sprox.sa.widgetselector import SAWidgetSelector
-from sprox.sa.validatorselector import SAValidatorSelector
+from sqlalchemy import (MetaData, and_, or_, func, desc as _desc,
+                        String, DateTime, Date, Interval, Integer)
+from sqlalchemy.exc import InvalidRequestError
+from sqlalchemy.engine import Engine
+from sqlalchemy.schema import Column
+from sqlalchemy.orm.exc import UnmappedClassError, NoResultFound, UnmappedInstanceError
+from sqlalchemy.orm import Mapper, _mapper_registry, SynonymProperty, object_mapper, class_mapper
+from sqlalchemy.orm.session import Session
+from sqlalchemy.orm.scoping import ScopedSession
+from sqlalchemy.orm.query import Query
+
+from sprox.iprovider import IProvider
 from sprox._compat import string_type, zip_longest
 
-class SAORMProviderError(Exception):pass
+from sprox.sa.support import PropertyLoader, resolve_entity, Binary, LargeBinary
+from sprox.sa.widgetselector import SAWidgetSelector
+from sprox.sa.validatorselector import SAValidatorSelector
+
+
+class SAORMProviderError(Exception):
+    pass
+
 
 class SAORMProvider(IProvider):
     default_view_names = ['_name', 'name', 'description', 'title']
@@ -51,23 +59,24 @@ class SAORMProvider(IProvider):
 
     def __init__(self, hint=None, **hints):
         """
-        initialize me with a engine, bound metadata or bound session object
+        initialize with an engine, bound metadata or bound session object
         or a combination of the above.
         """
-        #if hint is None and len(hints) == 0:
-        #    raise SAORMProviderError('You must provide a hint to this provider')
-        self.engine, self.session, self.metadata = self._get_engine(hint, hints)
+        # if hint is None and len(hints) == 0:
+        #   raise SAORMProviderError('You must provide a hint to this provider')
+        self.engine, self.session, self.metadata = self._get_engine(
+            hint, hints)
 
     def _get_engine(self, hint, hints):
         metadata = hints.get('metadata', None)
-        engine   = hints.get('engine', None)
-        session  = hints.get('session', None)
+        engine = hints.get('engine', None)
+        session = hints.get('session', None)
 
         if isinstance(hint, Engine):
-            engine=hint
+            engine = hint
 
         if isinstance(hint, MetaData):
-            metadata=hint
+            metadata = hint
 
         if isinstance(hint, (Session, ScopedSession)):
             session = hint
@@ -101,7 +110,7 @@ class SAORMProvider(IProvider):
                 if engine is not None and mapper.tables[0].bind != self.engine:
                     continue
                 return mapper.class_
-        raise KeyError('could not find model by the name %s'%(name))
+        raise KeyError('could not find model by the name %s' % (name))
 
     def get_entities(self):
         entities = []
@@ -146,7 +155,7 @@ class SAORMProvider(IProvider):
         if isinstance(field, SynonymProperty):
             field = self.get_field(entity, field.name)
 
-        #should cover Unicode, UnicodeText, Text and so on by inheritance
+        # should cover Unicode, UnicodeText, Text and so on by inheritance
         return isinstance(field.type, String)
 
     def get_primary_fields(self, entity):
@@ -160,7 +169,7 @@ class SAORMProvider(IProvider):
             except KeyError:
                 # Relations won't be attributes, but can't be primary anyway.
                 continue
-            if value.primary_key and not field_name in fields:
+            if value.primary_key and field_name not in fields:
                 fields.append(field_name)
         return fields
 
@@ -172,8 +181,9 @@ class SAORMProvider(IProvider):
     def _find_title_column(self, entity):
         entity = resolve_entity(entity)
         for column in class_mapper(entity).columns:
-            if 'title' in column.info and column.info['title']:
-                return column.key
+            if hasattr(column, 'info'):
+                if 'title' in column.info and column.info['title']:
+                    return column.key
         return None
 
     def get_view_field_name(self, entity, possible_names, item=None):
@@ -205,7 +215,7 @@ class SAORMProvider(IProvider):
             warn('No dropdown options will be shown for %s.  '
                  'Try passing the session into the initialization '
                  'of your form base object so that this sprocket '
-                 'can have values in the drop downs'%entity)
+                 'can have values in the drop downs' % entity)
             return []
 
         field = self.get_field(entity, field_name)
@@ -215,7 +225,7 @@ class SAORMProvider(IProvider):
             target_field = field.argument
         target_field = resolve_entity(target_field)
 
-        #some kind of relation
+        # some kind of relation
         if isinstance(target_field, Mapper):
             target_field = target_field.class_
 
@@ -232,7 +242,7 @@ class SAORMProvider(IProvider):
             def build_pk(row):
                 return "/".join([str(getattr(row, pk)) for pk in pk_fields])
 
-        return [ (build_pk(row), getattr(row, view_name)) for row in rows ]
+        return [(build_pk(row), getattr(row, view_name)) for row in rows]
 
     def get_relations(self, entity):
         entity = resolve_entity(entity)
@@ -242,7 +252,7 @@ class SAORMProvider(IProvider):
     def is_entity(self, entity):
         try:
             return bool(self.get_fields(entity))
-        except:
+        except Exception as bve:
             return False
 
     def is_subdocument(self, entity):
@@ -279,7 +289,7 @@ class SAORMProvider(IProvider):
         entity = resolve_entity(entity)
         field = getattr(entity, field_name)
         try:
-            self.session.query(entity).filter(field==value).one()
+            self.session.query(entity).filter(field == value).one()
         except NoResultFound:
             return True
         return False
@@ -297,7 +307,7 @@ class SAORMProvider(IProvider):
     def _relationship_local_side(self, relationship):
         if hasattr(relationship, 'local_columns'):
             return list(relationship.local_columns)
-        return list(relationship.local_side) #pragma: no cover
+        return list(relationship.local_side)  # pragma: no cover
 
     def _modify_params_for_relationships(self, entity, params):
         entity = resolve_entity(entity)
@@ -327,7 +337,7 @@ class SAORMProvider(IProvider):
                                     v = tuple(v)
                                 else:
                                     v = self._adapt_type(v, pk[0])
-                                #only add those items that come back
+                                # only add those items that come back
                                 new_v = self.session.query(target).get(v)
                                 if new_v is not None:
                                     target_obj.append(new_v)
@@ -339,18 +349,22 @@ class SAORMProvider(IProvider):
                             mapper = target
                             if not isinstance(target, Mapper):
                                 mapper = class_mapper(target)
-                            value = self._adapt_type(value, mapper.primary_key[0])
-                            target_obj = [self.session.query(target).get(value)]
+                            value = self._adapt_type(
+                                value, mapper.primary_key[0])
+                            target_obj = [
+                                self.session.query(target).get(value)]
                     else:
                         try:
                             object_mapper(value)
                             target_obj = value
                         except UnmappedInstanceError:
                             if isinstance(value, string_type) and "/" in value:
-                                value = map(self._adapt_type, value.split("/"), prop.remote_side)
+                                value = map(self._adapt_type, value.split(
+                                    "/"), prop.remote_side)
                                 value = tuple(value)
                             else:
-                                value = self._adapt_type(value, list(prop.remote_side)[0])
+                                value = self._adapt_type(
+                                    value, list(prop.remote_side)[0])
                             target_obj = self.session.query(target).get(value)
                     params[relation] = target_obj
                 else:
@@ -407,10 +421,10 @@ class SAORMProvider(IProvider):
                         klass = klass.class_
                     pk_name = self.get_primary_field(klass)
                     if isinstance(value, list) or isinstance(value, Query):
-                        #joins
+                        # joins
                         value = [getattr(value, pk_name) for value in value]
                     else:
-                        #fks
+                        # foreign keys
                         value = getattr(value, pk_name)
             r[prop.key] = value
         return r
@@ -420,7 +434,8 @@ class SAORMProvider(IProvider):
             if isinstance(field.default.arg, (string_type, int, float)):
                 return (True, field.default.arg)
             elif callable(field.default.arg):
-                # SQLAlachemy wraps default so that they receive a context, but TW can't provide one
+                # SQLAlachemy wraps default so that they receive a context, but
+                # TW can't provide one
                 return (True, lambda: field.default.arg(None))
         return (False, None)
 
@@ -428,7 +443,8 @@ class SAORMProvider(IProvider):
         args = {}
         if isinstance(field, PropertyLoader):
             args['provider'] = self
-            args['nullable'] = self.is_nullable(viewbase.__entity__, field_name)
+            args['nullable'] = self.is_nullable(
+                viewbase.__entity__, field_name)
         return args
 
     def _build_subfields(self, viewbase, field):
@@ -469,13 +485,16 @@ class SAORMProvider(IProvider):
             if relation in params:
                 value = params[relation]
                 if not isinstance(value, string_type):
-                    # When not a string consider it the related class primary key
-                    params.update(self._modify_params_for_relationships(entity, {relation: value}))
+                    # When not a string consider it the related class primary
+                    # key
+                    params.update(self._modify_params_for_relationships(
+                        entity, {relation: value}))
                     continue
 
                 if not value:
                     # As we use ``contains``, searching for an empty text
-                    # will just lead to all results so we just remove the filter.
+                    # will just lead to all results so we just remove the
+                    # filter.
                     del params[relation]
                     continue
 
@@ -491,7 +510,8 @@ class SAORMProvider(IProvider):
                 else:
                     filter = (func.lower(related_column) == value.lower())
 
-                params[relation] = self.session.query(target_class).filter(filter).all()
+                params[relation] = self.session.query(
+                    target_class).filter(filter).all()
 
         return params
 
@@ -521,15 +541,18 @@ class SAORMProvider(IProvider):
                 related_pk_col = getattr(related_class, related_pk)
                 related_pk_values = (getattr(v, related_pk) for v in value)
                 if self._relates_many(entity, field_name):
-                    field_filter = field.any(related_pk_col.in_(related_pk_values))
+                    field_filter = field.any(
+                        related_pk_col.in_(related_pk_values))
                 else:
-                    field_filter = field.has(related_pk_col.in_(related_pk_values))
+                    field_filter = field.has(
+                        related_pk_col.in_(related_pk_values))
                 query = query.filter(field_filter)
             elif field_name in substring_filters and self.is_string(entity, field_name):
                 escaped_value = self._escape_like(value.lower())
-                query = query.filter(func.lower(field).contains(escaped_value, escape='*'))
+                query = query.filter(func.lower(
+                    field).contains(escaped_value, escape='*'))
             else:
-                query = query.filter(field==value)
+                query = query.filter(field == value)
 
         count = query.count()
 
@@ -568,7 +591,6 @@ class SAORMProvider(IProvider):
 
         return count, objs
 
-
     def _modify_params_for_dates(self, entity, params):
         entity = resolve_entity(entity)
         mapper = class_mapper(entity)
@@ -578,7 +600,8 @@ class SAORMProvider(IProvider):
                 if hasattr(field, 'type'):
                     if isinstance(field.type, DateTime):
                         if not isinstance(value, datetime):
-                            dt = datetime.strptime(value[:19], '%Y-%m-%d %H:%M:%S')
+                            dt = datetime.strptime(
+                                value[:19], '%Y-%m-%d %H:%M:%S')
                             params[key] = dt
                     elif isinstance(field.type, Date):
                         if not isinstance(value, date):
@@ -590,8 +613,8 @@ class SAORMProvider(IProvider):
                                 r'((?P<days>\d+) days, )?(?P<hours>\d+):'
                                 r'(?P<minutes>\d+):(?P<seconds>\d+)',
                                 str(value)).groupdict(0)
-                            dt = timedelta(**dict(( (key, int(value))
-                                                    for key, value in list(d.items()) )))
+                            dt = timedelta(**dict(((key, int(value))
+                                                   for key, value in list(d.items()))))
                             params[key] = dt
         return params
 
@@ -603,7 +626,7 @@ class SAORMProvider(IProvider):
             if omit_fields and relation in omit_fields:
                 continue
 
-            #clear out those items which are not found in the params list.
+            # clear out those items which are not found in the params list.
             if relation not in params or not params[relation]:
                 related_items = getattr(obj, relation)
                 if related_items is not None:
@@ -644,7 +667,8 @@ class SAORMProvider(IProvider):
         self.session.flush()
         return obj
 
-    # This is hard to test because of some kind of rollback issue in the test framework
+    # This is hard to test because of some kind of rollback issue in the test
+    # framework
     def delete(self, entity, params):  # pragma: no cover
         obj = self._get_obj(entity, params)
         self.session.delete(obj)

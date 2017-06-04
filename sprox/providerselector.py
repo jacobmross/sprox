@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.providerselector.py
+
 """
 Provider Locator Module
 
@@ -15,14 +18,14 @@ try:
     from sqlalchemy.orm import _mapper_registry, class_mapper
     from sqlalchemy.orm.session import Session
     from sqlalchemy.orm.scoping import ScopedSession
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     pass
 
-try: #pragma:no cover
+try:  # pragma: no cover
     from sqlalchemy.orm.instrumentation import ClassManager
-except ImportError: #pragma:no cover
-    try: # pragma: no cover
-        #sa 0.6- support
+except ImportError:  # pragma: no cover
+    try:  # pragma: no cover
+        # sa 0.6- support
         from sqlalchemy.orm.attributes import ClassManager
     except ImportError:
         pass
@@ -30,12 +33,12 @@ except ImportError: #pragma:no cover
 SAORMProvider = None
 try:
     from sprox.sa.provider import SAORMProvider
-except ImportError: # pragma: no cover
+except ImportError:  # pragma: no cover
     pass
-#MongoKitProvider = None
-#try:
+# MongoKitProvider = None
+# try:
 #    from sprox.mk.provider import MongoKitProvider
-#except ImportError: # pragma: no cover
+# except ImportError:  # pragma: no cover
 #    pass
 MingProvider = None
 MappedClass = None
@@ -43,7 +46,7 @@ try:
     from sprox.mg.provider import MingProvider
     try:
         from ming.odm.declarative import MappedClass
-    except ImportError: #pragma: no cover
+    except ImportError:  # pragma: no cover
         from ming.orm.declarative import MappedClass
 
 except ImportError:   # pragma: no cover
@@ -51,7 +54,9 @@ except ImportError:   # pragma: no cover
 
 from sprox.dummyentity import DummyEntity
 
+
 class ProviderSelector:
+
     def __init__(self):
         self._identifiers = {}
         self._entities = {}
@@ -65,7 +70,7 @@ class ProviderSelector:
     def get_provider(self, entity, **hints):
         raise NotImplementedError
 
-#class _MongoKitSelector(ProviderSelector):
+# class _MongoKitSelector(ProviderSelector):
 #    def get_identifier(self, entity, **hints):
 #        return entity.__name__
 
@@ -73,12 +78,13 @@ class ProviderSelector:
 #        #TODO cache
 #        return MongoKitProvider(None)
 
+
 class _MingSelector(ProviderSelector):
-    #def get_identifier(self, entity, **hints):
+    # def get_identifier(self, entity, **hints):
     #    return entity.__name__
 
     def get_provider(self, entity=None, hint=None, **hints):
-        #TODO cache
+        # TODO cache
         return MingProvider(entity.__mongometa__.session)
 
 
@@ -89,14 +95,14 @@ class _SAORMSelector(ProviderSelector):
 
     def _get_engine(self, hint, hints):
         metadata = hints.get('metadata', None)
-        engine   = hints.get('engine', None)
-        session  = hints.get('session', None)
+        engine = hints.get('engine', None)
+        session = hints.get('session', None)
 
         if isinstance(hint, Engine):
-            engine=hint
+            engine = hint
 
         if isinstance(hint, MetaData):
-            metadata=hint
+            metadata = hint
 
         if isinstance(hint, (Session, ScopedSession)):
             session = hint
@@ -118,7 +124,9 @@ class _SAORMSelector(ProviderSelector):
                 if engine is not None and mapper.tables[0].bind == engine:
                     return mapper.class_
 
-        raise KeyError('could not find model by the name %s in %s'%(model_name, metadata))
+        raise KeyError(
+            'could not find model by the name %s in %s' % (model_name, metadata)
+        )
 
     def get_identifier(self, entity, **hints):
         return entity.__name__
@@ -161,30 +169,34 @@ class _SAORMSelector(ProviderSelector):
             self._providers[engine] = SAORMProvider(hint, **hints)
         return self._providers[engine]
 
+
 SAORMSelector = _SAORMSelector()
-#MongoKitSelector = _MongoKitSelector()
+# MongoKitSelector = _MongoKitSelector()
 MingSelector = _MingSelector()
 
-#XXX:
-#StormSelector = _StormSelector()
-#SOSelector    = _SOSelector()
+# XXX:
+# StormSelector = _StormSelector()
+# SOSelector    = _SOSelector()
 
-class ProviderTypeSelectorError(Exception):pass
+
+class ProviderTypeSelectorError(Exception):
+    pass
+
 
 class ProviderTypeSelector(object):
 
     def get_selector(self, entity=None, **hints):
-        #use a SA Helper
+        # use a SA Helper
         if hasattr(entity, '_sa_class_manager') and isinstance(entity._sa_class_manager, ClassManager):
             return SAORMSelector
         elif inspect.isclass(entity) and issubclass(entity, DummyEntity):
             return SAORMSelector
-        #elif hasattr(entity, '_use_pylons') or hasattr(entity,'_enable_autoref'):
-            #xxx: find a better marker
+        # elif hasattr(entity, '_use_pylons') or hasattr(entity,'_enable_autoref'):
+            # xxx: find a better marker
         #    return MongoKitSelector
         elif inspect.isclass(entity) and MappedClass is not None and issubclass(entity, MappedClass):
             return MingSelector
-        #other helper definitions are going in here
+        # other helper definitions are going in here
         else:
-            raise ProviderTypeSelectorError('Entity %s has no known provider mapping.'%entity)
-
+            raise ProviderTypeSelectorError(
+                'Entity %s has no known provider mapping.' % entity)

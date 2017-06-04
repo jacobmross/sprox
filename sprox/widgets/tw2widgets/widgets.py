@@ -1,18 +1,26 @@
+# -*- coding: utf-8 -*-
+# sprox.widgets.tw2widgets.widgets.py
+
 from formencode import Invalid
-from tw2.core import Widget, Param, DisplayOnlyWidget, ValidationError, RepeatingWidget
-from tw2.forms import (CalendarDatePicker, CalendarDateTimePicker, TableForm, DataGrid,
-                       SingleSelectField, MultipleSelectField, InputField, HiddenField,
-                       TextField, FileField, CheckBox, PasswordField, TextArea, ListLayout,
-                       StripBlanks)
-from tw2.forms import Label as tw2Label
-from tw2.core import validation as tw2v
+
+from tw2.core import (Widget, Param,
+    DisplayOnlyWidget, RepeatingWidget,
+    ValidationError, validation as tw2v)
+from tw2.forms import (
+    CalendarDatePicker, CalendarDateTimePicker, TableForm, DataGrid,
+    SingleSelectField, MultipleSelectField, InputField, HiddenField,
+    TextField, FileField, CheckBox, PasswordField,
+    TextArea, ListLayout, StripBlanks, Label as tw2Label)
+
 from sprox._compat import unicode_text
 
 
 class Label(tw2Label):
+
     def prepare(self):
         self.text = unicode_text(self.value)
         super(Label, self).prepare()
+
 
 class SproxMethodPutHiddenField(HiddenField):
     name = '_method'
@@ -21,65 +29,90 @@ class SproxMethodPutHiddenField(HiddenField):
         self.value = 'PUT'
         super(SproxMethodPutHiddenField, self).prepare()
 
+
 class ContainerWidget(DisplayOnlyWidget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.container"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.container"
     controller = Param('controller', attribute=False, default=None)
     css_class = "containerwidget"
     id_suffix = 'container'
 
+
 class TableLabelWidget(Widget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.tableLabel"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.tableLabel"
     controller = Param('controller', attribute=False, default=None)
     identifier = Param('identifier', attribute=False)
+
 
 class ModelLabelWidget(Widget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.modelLabel"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.modelLabel"
     controller = Param('controller', attribute=False, default=None)
     identifier = Param('identifier', attribute=False)
 
+
 class EntityLabelWidget(Widget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.entityLabel"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.entityLabel"
     controller = Param('controller', attribute=False, default=None)
     entity = Param('entity', attribute=False)
     css_class = "entitylabelwidget"
 
+
 class RecordViewWidget(Widget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.recordViewTable"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.recordViewTable"
     entity = Param('entity', attribute=False, default=None)
 
+
 class RecordFieldWidget(Widget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.recordField"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.recordField"
     field_name = Param('field_name', attribute=False)
     css_class = "recordfieldwidget"
 
+
 class TableDefWidget(Widget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.tableDef"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.tableDef"
     identifier = Param('identifier', attribute=False)
 
+
 class EntityDefWidget(Widget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.entityDef"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.entityDef"
     entity = Param('entity', attribute=False)
 
+
 class TableWidget(Widget):
-    template = "genshi:sprox.widgets.tw2widgets.templates.table"
+    available_engines = ['kajiki', 'genshi']
+    template = "sprox.widgets.tw2widgets.templates.table"
+
 
 class SproxCalendarDatePicker(CalendarDatePicker):
     date_format = '%Y-%m-%d'
 
+
 class SproxTimePicker(CalendarDateTimePicker):
     date_format = '%H:%M:%S'
+
 
 class SproxCalendarDateTimePicker(CalendarDateTimePicker):
     date_format = '%Y-%m-%d %H:%M:%S'
 
+
 class SproxDataGrid(DataGrid):
+    available_engines = ['kajiki', 'genshi', 'mako']
     template = "sprox.widgets.tw2widgets.templates.datagrid"
 
     pks = Param('pks', attribute=False),
     xml_fields = Param('xml_fields', attribute=False, default=['actions'])
     value = []
 
+
 class SproxCheckBox(CheckBox):
+
     def prepare(self):
         super(SproxCheckBox, self).prepare()
         self.attrs['value'] = 'true'
@@ -95,11 +128,11 @@ class PropertySingleSelectField(SingleSelectField):
     prompt_text = None
 
     def prepare(self):
-        #This is required for ming
+        # This is required for ming
         entity = self.__class__.entity
 
         options = self.provider.get_dropdown_options(entity, self.field_name, self.dropdown_field_names)
-        self.options = [(unicode_text(k), unicode_text(v)) for k,v in options]
+        self.options = [(unicode_text(k), unicode_text(v)) for k, v in options]
         if self.nullable:
             self.options.append(['', "-----------"])
 
@@ -148,7 +181,7 @@ class PropertyMultipleSelectField(MultipleSelectField):
         entity = self.__class__.entity
 
         options = self.provider.get_dropdown_options(entity, self.field_name, self.dropdown_field_names)
-        self.options = [(unicode_text(k), unicode_text(v)) for k,v in options]
+        self.options = [(unicode_text(k), unicode_text(v)) for k, v in options]
 
         if not self.value:
             self.value = []
@@ -211,6 +244,7 @@ class SubDocument(ListLayout):
 
 
 class SubDocumentsList(RepeatingWidget):
+    available_engines = ['kajiki', 'genshi', 'mako']
     template = 'sprox.widgets.tw2widgets.templates.subdocuments'
     child = SubDocument
     children_attrs = Param('children_attrs', attribute=False, default={})
@@ -231,7 +265,7 @@ class SubDocumentsList(RepeatingWidget):
     def prepare(self):
         super(SubDocumentsList, self).prepare()
         # Hide the last element, used to add new entries
-        self.children[len(self.children)-1].attrs['style'] = 'display: none'
+        self.children[len(self.children) - 1].attrs['style'] = 'display: none'
 
     def _validate(self, value, state=None):
         return super(SubDocumentsList, self)._validate(

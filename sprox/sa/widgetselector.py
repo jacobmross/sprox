@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.sa.widgetselecter.py
+
 """
 widgetselecter Module
 
@@ -22,31 +25,31 @@ Original Version by Christopher Perkins 2007Database
 Released under MIT license.
 """
 from sqlalchemy.types import *
-from sprox.widgets import *
-
-from sqlalchemy.schema import Column
+# from sqlalchemy.schema import Column
 from sqlalchemy.orm import SynonymProperty
-from sprox.sa.support import PropertyLoader, Binary, LargeBinary
-from sprox._widgetselector import WidgetSelector
 
-text_field_limit=100
+from sprox.widgets import *
+from sprox.sa.support import PropertyLoader, Binary, LargeBinary
+from sprox.widgetselector import WidgetSelector
+
+text_field_limit = 100
 
 
 class SAWidgetSelector(WidgetSelector):
 
     default_widgets = {
-    String:   TextField,
-    Integer:  TextField,
-    Numeric:  TextField,
-    DateTime: SproxCalendarDateTimePicker,
-    Date:     SproxCalendarDatePicker,
-    Time:     SproxTimePicker,
-    Binary:   FileField,
-    LargeBinary: FileField,
-    BLOB:   FileField,
-    PickleType: TextField,
-    Boolean: SproxCheckBox,
-#    NullType: TextField
+        String: TextField,
+        Integer: TextField,
+        Numeric: TextField,
+        DateTime: SproxCalendarDateTimePicker,
+        Date: SproxCalendarDatePicker,
+        Time: SproxTimePicker,
+        Binary: FileField,
+        LargeBinary: FileField,
+        BLOB: FileField,
+        PickleType: TextField,
+        Boolean: SproxCheckBox,
+        # NullType: TextField
     }
 
     default_name_based_widgets = {}
@@ -69,7 +72,7 @@ class SAWidgetSelector(WidgetSelector):
         # this is really the best we can do, since we cannot know
         # what type the field represents until execution occurs.
         if isinstance(field, SynonymProperty):
-            #fix to handle weird synonym prop stuff
+            # fix to handle weird synonym prop stuff
             if isinstance(field.descriptor, property) or field.descriptor.__class__.__name__.endswith('SynonymProp'):
                 return TextField
 
@@ -85,6 +88,6 @@ class SAWidgetSelector(WidgetSelector):
                 break
 
         widget = self.default_widgets[type_]
-        if widget is TextField and hasattr(field.type, 'length') and (field.type.length is None or field.type.length>text_field_limit):
+        if widget is TextField and hasattr(field.type, 'length') and (field.type.length is None or field.type.length > text_field_limit):
             widget = TextArea
         return widget

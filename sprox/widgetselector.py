@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.widgetselecter.py
+
 """
 widgetselecter Module
 
@@ -23,16 +26,37 @@ Released under MIT license.
 """
 import warnings
 
-from sprox._widgetselector import *
+# from sprox._widgetselector import *
 
-try:
-    from sprox.sa.widgetselector import SAWidgetSelector as _SAWidgetSelector
+try:  # pragma: no cover
+    from tw2.core import Widget
+    from tw2.forms.widgets import *
+except ImportError as e:  # pragma: no cover
+    from tw.api import Widget
+    from tw.forms.fields import *
 
-    class SAWidgetSelector(_SAWidgetSelector):
-        def __init__(self, *args, **kw):
-            warnings.warn('This class has moved to the sprox.sa.widgetselector module.') # pragma: no cover
-            _SAWidgetSelector.__init__(self, *args, **kw) # pragma: no cover
-except ImportError: # pragma: no cover
-    pass # pragma: no cover
+from sprox.widgets import *
 
 
+class WidgetSelector(object):
+
+    def select(self, field):
+        return Widget
+
+
+class EntitiesViewWidgetSelector(WidgetSelector):
+
+    def select(self, field):
+        return EntityLabelWidget
+
+
+class EntityDefWidgetSelector(WidgetSelector):
+
+    def select(self, field):
+        return EntityDefWidget
+
+
+class RecordViewWidgetSelector(WidgetSelector):
+
+    def select(self, field):
+        return RecordFieldWidget

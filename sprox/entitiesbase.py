@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+# sprox.entitiesbase.py
+
 from sprox.widgets import ContainerWidget, TableWidget
-from .viewbase import ViewBase
-from .widgetselector import EntitiesViewWidgetSelector, EntityDefWidgetSelector
+from sprox.viewbase import ViewBase
+from sprox.widgetselector import EntitiesViewWidgetSelector, EntityDefWidgetSelector
 from sprox.metadata import EntitiesMetadata, FieldsMetadata
+from sprox.dummyentity import DummyEntity
+
 
 class EntityDefBase(ViewBase):
     """This view can display all of the entities for a given provider.
@@ -102,11 +107,10 @@ class EntityDefBase(ViewBase):
 
     """
 
-    __base_widget_type__       = TableWidget
-    __widget_selector_type__   = EntityDefWidgetSelector
-    __metadata_type__          = FieldsMetadata
+    __base_widget_type__ = TableWidget
+    __widget_selector_type__ = EntityDefWidgetSelector
+    __metadata_type__ = FieldsMetadata
 
-from .dummyentity import DummyEntity
 
 class EntitiesBase(ViewBase):
     """This view can display all of the entities for a given provider.
@@ -168,7 +172,6 @@ class EntitiesBase(ViewBase):
 
     """
     __entity__ = DummyEntity
-    __base_widget_type__       = ContainerWidget
-    __widget_selector_type__   = EntitiesViewWidgetSelector
-    __metadata_type__          = EntitiesMetadata
-
+    __base_widget_type__ = ContainerWidget
+    __widget_selector_type__ = EntitiesViewWidgetSelector
+    __metadata_type__ = EntitiesMetadata

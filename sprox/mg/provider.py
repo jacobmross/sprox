@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.mg.provider.py
+
 """
 mingprovider Module
 
@@ -11,14 +14,15 @@ from bson.errors import InvalidId
 import itertools
 from sprox.iprovider import IProvider
 from sprox.util import timestamp
-import datetime, inspect
+import datetime
+import inspect
 
 try:
     from ming.odm import mapper, ForeignIdProperty, FieldProperty, RelationProperty
     from ming.odm.declarative import MappedClass
     from ming.odm.property import OneToManyJoin, ManyToOneJoin, ORMProperty
     from ming.odm.icollection import InstrumentedObj
-except ImportError: #pragma nocover
+except ImportError:  # pragma nocover
     from ming.orm import mapper, ForeignIdProperty, FieldProperty, RelationProperty
     from ming.orm.declarative import MappedClass
     from ming.orm.property import OneToManyJoin, ManyToOneJoin, ORMProperty
@@ -34,6 +38,7 @@ from .widgetselector import MingWidgetSelector
 from .validatorselector import MingValidatorSelector
 from pymongo import ASCENDING, DESCENDING
 from sprox._compat import string_type, zip_longest
+
 
 class MingProvider(IProvider):
     default_view_names = ['_name', 'name', 'description', 'title']
@@ -78,10 +83,11 @@ class MingProvider(IProvider):
     def _entities(self):
         entities = getattr(self, '__entities', None)
         if entities is None:
-            entities = dict(((m.mapped_class.__name__, m) for m in MappedClass._registry.values()))
+            entities = dict(((m.mapped_class.__name__, m)
+                             for m in MappedClass._registry.values()))
             self.__entities = entities
         return entities
-    
+
     def get_entity(self, name):
         """Get an entity with the given name."""
         return self._entities[name].mapped_class
@@ -179,23 +185,25 @@ class MingProvider(IProvider):
 
             schemaitem = field_type
             if isinstance(schemaitem, S.OneOf):
-                return [ (opt,opt) for opt in schemaitem.options ]
-            raise NotImplementedError("get_dropdown_options doesn't know how to get the options for field %r of type %r" % (field, schemaitem))
+                return [(opt, opt) for opt in schemaitem.options]
+            raise NotImplementedError(
+                "get_dropdown_options doesn't know how to get the options for field %r of type %r" % (field, schemaitem))
 
         if not isinstance(field, RelationProperty):
-            raise NotImplementedError("get_dropdown_options expected a FieldProperty or RelationProperty field, but got %r" % field)
+            raise NotImplementedError(
+                "get_dropdown_options expected a FieldProperty or RelationProperty field, but got %r" % field)
         try:
             join = field.join
             iter = join.rel_cls.query.find()
             rel_cls = join.rel_cls
-        #this seems like a work around for a bug in ming.
-        except KeyError: # pragma: no cover
+        # this seems like a work around for a bug in ming.
+        except KeyError:  # pragma: no cover
             join = field.related
             iter = join.query.find()
             rel_cls = join
 
         view_field = self.get_view_field_name(rel_cls, view_names)
-        return [ (str(obj._id), getattr(obj, view_field)) for obj in iter ]
+        return [(str(obj._id), getattr(obj, view_field)) for obj in iter]
 
     def get_relations(self, entity):
         """Get all of the field names in an enity which are related to other entities."""
@@ -216,14 +224,15 @@ class MingProvider(IProvider):
 
     def is_query(self, entity, value):
         """determines if a field is a query instead of actual list of data"""
-        #Currently not supported in MING
+        # Currently not supported in MING
         return False
 
     def is_nullable(self, entity, field_name):
         """Determine if a field is nullable."""
         fld = self.get_field(entity, field_name)
         if isinstance(fld, RelationProperty):
-            # check the required attribute on the corresponding foreign key field
+            # check the required attribute on the corresponding foreign key
+            # field
             fld = fld.join.prop
 
         fld = fld.field
@@ -257,10 +266,12 @@ class MingProvider(IProvider):
                 field_type = schema
 
             if isinstance(field_type, S.Object):
-                subfields = [FieldProperty('.'.join((field.name, n)), t) for n, t in field_type.fields.items()]
+                subfields = [FieldProperty('.'.join((field.name, n)), t)
+                             for n, t in field_type.fields.items()]
                 direct = False
             else:
-                subfields = [FieldProperty('.'.join((field.name, '$')), field_type)]
+                subfields = [FieldProperty(
+                    '.'.join((field.name, '$')), field_type)]
                 direct = True
 
             subfields_widget_args = {'children': [],
@@ -336,9 +347,9 @@ class MingProvider(IProvider):
         if key in relations:
             related = field.related
             if isinstance(value, list):
-                return related.query.find({'_id':{'$in':[self._related_object_id(i) for i in value]}}).all()
+                return related.query.find({'_id': {'$in': [self._related_object_id(i) for i in value]}}).all()
             else:
-                return self.get_obj(related, {'_id':self._related_object_id(value)})
+                return self.get_obj(related, {'_id': self._related_object_id(value)})
 
         field = getattr(field, 'field', None)
         if field is not None:
@@ -418,13 +429,15 @@ class MingProvider(IProvider):
             if relation in params:
                 value = params[relation]
                 if not isinstance(value, string_type):
-                    # When not a string consider it the related class primary key
+                    # When not a string consider it the related class primary
+                    # key
                     params.update({relation: value})
                     continue
 
                 if not value:
                     # As we use ``contains``, searching for an empty text
-                    # will just lead to all results so we just remove the filter.
+                    # will just lead to all results so we just remove the
+                    # filter.
                     del params[relation]
                     continue
 
@@ -433,7 +446,8 @@ class MingProvider(IProvider):
                 view_name = self.get_view_field_name(target_class, view_names)
 
                 if relation in substrings:
-                    filter = {view_name: {'$regex': re.compile(re.escape(value), re.IGNORECASE)}}
+                    filter = {view_name: {'$regex': re.compile(
+                        re.escape(value), re.IGNORECASE)}}
                 else:
                     filter = {view_name: value}
                 value = target_class.query.find(filter).all()
@@ -472,7 +486,8 @@ class MingProvider(IProvider):
                 params.pop(relation)
                 if my_foreign_key:
                     my_foreign_key = my_foreign_key[0]
-                    params[my_foreign_key.name] = {'$in': [r._id for r in value]}
+                    params[my_foreign_key.name] = {
+                        '$in': [r._id for r in value]}
                 elif rel_foreign_key:
                     rel_foreign_key = rel_foreign_key[0]
                     value = [getattr(r, rel_foreign_key.name) for r in value]
@@ -501,7 +516,8 @@ class MingProvider(IProvider):
 
         for field in substring_filters:
             if self.is_string(entity, field):
-                filters[field] = {'$regex': re.compile(re.escape(filters[field]), re.IGNORECASE)}
+                filters[field] = {'$regex': re.compile(
+                    re.escape(filters[field]), re.IGNORECASE)}
 
         iter = entity.query.find(filters)
         if offset:
@@ -526,7 +542,8 @@ class MingProvider(IProvider):
     def is_string(self, entity, field_name):
         fld = self.get_field(entity, field_name)
         if isinstance(fld, RelationProperty):
-            # check the required attribute on the corresponding foreign key field
+            # check the required attribute on the corresponding foreign key
+            # field
             fld = fld.join.prop
 
         fld = getattr(fld, 'field', None)
@@ -535,18 +552,19 @@ class MingProvider(IProvider):
     def is_binary(self, entity, field_name):
         fld = self.get_field(entity, field_name)
         if isinstance(fld, RelationProperty):
-            # check the required attribute on the corresponding foreign key field
+            # check the required attribute on the corresponding foreign key
+            # field
             fld = fld.join.prop
 
         fld = getattr(fld, 'field', None)
-        return isinstance(fld.schema,S.Binary)
+        return isinstance(fld.schema, S.Binary)
 
     def relation_fields(self, entity, field_name):
         field = self.get_field(entity, field_name)
         if not isinstance(field, RelationProperty):
             raise TypeError("The field %r is not a relation field" % field)
 
-        #This is here for many-to-many turbogears-ming relations
+        # This is here for many-to-many turbogears-ming relations
         if not field.join.prop:
             return []
 
@@ -569,7 +587,7 @@ class MingProvider(IProvider):
         return args
 
     def is_unique(self, entity, field_name, value):
-        iter = entity.query.find({ field_name: value })
+        iter = entity.query.find({field_name: value})
         return iter.count() == 0
 
     def is_unique_field(self, entity, field_name):
@@ -595,10 +613,10 @@ class MingProvider(IProvider):
                     klass = self.relation_entity(obj.__class__, prop)
                     pk_name = self.get_primary_field(klass)
                     if isinstance(value, list):
-                        #joins
+                        # joins
                         value = [getattr(value, pk_name) for value in value]
                     else:
-                        #fks
+                        # fks
                         value = getattr(value, pk_name)
             r[prop] = value
         return r

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.iprovider.py
+
 """
 iprovider Module
 
@@ -39,9 +42,12 @@ Original Version by Christopher Perkins 2008
 Released under MIT license.
 """
 
+
 class IProvider:
+
     def __init__(self, hint=None, **hints):
         pass
+
     def get_field(self, entity, name):
         """Get a field with the given field name."""
         raise NotImplementedError
@@ -158,7 +164,7 @@ class IProvider:
         """Delete an entry of typeentity which matches the params."""
         raise NotImplementedError
 
-    def query(self,entity,limit=None,offset=None,limit_fields=None,order_by=None,desc=False):
+    def query(self, entity, limit=None, offset=None, limit_fields=None, order_by=None, desc=False):
         """Perform a query against this entity.
 
         :Arguments:
@@ -180,12 +186,13 @@ class IProvider:
         """
         raise NotImplementedError
 
-    def is_binary(self,entity,name):
+    def is_binary(self, entity, name):
         """Determine if the field in the entity is a binary field."""
         raise NotImplementedError
 
     def relation_fields(self, entity, field_name):
-        """For the relation field with the given name, return the corresponding foreign key field(s) in the entity.
+        """For the relation field with the given name,
+        return the corresponding foreign key field(s) in the entity.
 
         :Returns:
           A list of the names of the foreign key fields.
@@ -193,7 +200,8 @@ class IProvider:
         raise NotImplementedError
 
     def get_field_widget_args(self, entity, field_name, field):
-        """Return a dict with any additional arguments that should be passed for the widget for the field in the entity.
+        """Return a dict with any additional arguments that
+        should be passed for the widget for the field in the entity.
 
         :Returns:
           A dict of additional widget arguments."""
@@ -233,4 +241,3 @@ class IProvider:
         # we may not necessary be able to derive a primary key reference to
         # a subdocument. (if they embedded in a non-relational db)
         raise NotImplementedError
-

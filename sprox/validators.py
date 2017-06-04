@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.validators.py
+
 """
 validators Module
 
@@ -5,9 +8,14 @@ Copyright (c) 2008 Christopher Perkins
 Original Version by Christopher Perkins 2008
 Released under MIT license.
 """
-from formencode import FancyValidator, Invalid
-from formencode.validators import UnicodeString as FEUnicodeString
-from formencode.validators import NotEmpty
+__all__ = [
+    'NotEmpty',
+    'UnicodeString',
+    'UniqueValue'
+]
+
+from formencode import FancyValidator, Invalid as InvalidError
+from formencode.validators import NotEmpty, UnicodeString as FEUnicodeString
 
 
 class UnicodeString(FEUnicodeString):
@@ -15,16 +23,16 @@ class UnicodeString(FEUnicodeString):
 
 
 class UniqueValue(FancyValidator):
+
     def __init__(self, provider, entity, field_name, *args, **kw):
         self.provider = provider
-        self.entity   = entity
-        self.field_name    = field_name
+        self.entity = entity
+        self.field_name = field_name
         FancyValidator.__init__(self, *args, **kw)
 
     def _to_python(self, value, state):
         if not self.provider.is_unique(self.entity, self.field_name, value):
-            raise Invalid(
+            raise InvalidError(
                 'That value already exists',
                 value, state)
         return value
-

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.tablebase.py
+
 """
 tablebase Module
 
@@ -9,20 +12,22 @@ Released under MIT license.
 """
 from operator import itemgetter
 
-try: #pragma: no cover
-    import tw2.forms
-    from tw2.core import Widget
-    from tw2.core.widgets import WidgetMeta
-    from tw2.forms.datagrid import Column
-except ImportError: #pragma: no cover
-    from tw.forms.datagrid import Column
-    from tw.api import Widget
-    class WidgetMeta(object):
-        pass
+# try:  # pragma: no cover
+#     import tw2.forms
+#     from tw2.core import Widget
+#     from tw2.core.widgets import WidgetMeta
+#     from tw2.forms.datagrid import Column
+# except ImportError:  # pragma: no cover
+#     from tw.forms.datagrid import Column
+#     from tw.api import Widget
 
-from sprox.widgets import SproxDataGrid
+#     class WidgetMeta(object):
+#         pass
+
+from sprox.widgets import SproxDataGrid, Widget, WidgetMeta, Column
 from sprox.viewbase import ViewBase
 from sprox.metadata import FieldsMetadata
+
 
 class TableBase(ViewBase):
     """This class allows you to create a table widget.
@@ -204,12 +209,12 @@ class TableBase(ViewBase):
 
     """
 
-    #object overrides
+    # object overrides
     __base_widget_type__ = SproxDataGrid
-    __metadata_type__    = FieldsMetadata
-    __headers__          = None
-    __column_widths__    = None
-    __xml_fields__       = None
+    __metadata_type__ = FieldsMetadata
+    __headers__ = None
+    __column_widths__ = None
+    __xml_fields__ = None
     __default_column_width__ = "10em"
 
     def _do_get_fields(self):
@@ -285,10 +290,13 @@ class TableBase(ViewBase):
         field_columns = []
         for field in self.__fields__:
             widget = field_widget_dict.get(field, None)
-            if widget is None or self._table_field_is_plain_widget(widget): # yuck
-                column = Column(field, itemgetter(field), self.__headers__.get(field, field))
+            # yuck
+            if widget is None or self._table_field_is_plain_widget(widget):
+                column = Column(field, itemgetter(field),
+                                self.__headers__.get(field, field))
             else:
-                column = Column(field, widget, self.__headers__.get(field, field))
+                column = Column(
+                    field, widget, self.__headers__.get(field, field))
             field_columns.append(column)
         args['fields'] = field_columns
 

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+# sprox.formbase.py
+
 """
 formbase Module
 
@@ -8,49 +11,57 @@ Original Version by Christopher Perkins 2008
 Released under MIT license.
 """
 
+import inspect
 import warnings
 
-try: #pragma: no cover
-    from tw2.core import Widget
-    from tw2.core.widgets import WidgetMeta
-    from tw2.forms import HiddenField, TableForm
-except ImportError: #pragma: no cover
-    from tw.api import Widget
-    from tw.forms import HiddenField, TableForm
-    class WidgetMeta(object):
-        """TW2 WidgetMetaClass"""
+# try:  # pragma: no cover
+#     from tw2.core import Widget
+#     from tw2.core.widgets import WidgetMeta
+#     from tw2.forms import HiddenField, TableForm
+# except ImportError:  # pragma: no cover
+#     from tw.api import Widget
+#     from tw.forms import HiddenField, TableForm
+
+#     class WidgetMeta(object):
+#         """TW2 WidgetMetaClass"""
 
 
-import inspect
-from sprox.util import name2label, is_widget, is_widget_class
-
-from sprox.widgets import SproxMethodPutHiddenField, CalendarBase, CalendarDatePicker, CalendarDateTimePicker
-from .viewbase import ViewBase, ViewBaseError
 from formencode import Schema, All
 from formencode import Validator
 from formencode.validators import String
-from sprox.validators import UnicodeString, NotEmpty
 
-from sprox.validators import UniqueValue
+from sprox.util import name2label, is_widget, is_widget_class
+
+from sprox.widgets import Widget, WidgetMeta, HiddenField, TableForm
+from sprox.widgets import SproxMethodPutHiddenField, CalendarBase, CalendarDatePicker, CalendarDateTimePicker
+from sprox.validators import UnicodeString, NotEmpty, UniqueValue
 from sprox.metadata import FieldsMetadata
 from sprox.viewbase import ViewBase, ViewBaseError
 
+
 class FilteringSchema(Schema):
-    """This makes formencode work for most forms, because some wsgi apps append extra values to the parameter list."""
+    """
+    This makes formencode work for most forms,
+    because some wsgi apps append extra values to the parameter list.
+    """
     filter_extra_fields = True
     allow_extra_fields = True
 
+
 class Field(object):
-    """Used to handle the case where you want to override both a validator and a widget for a given field"""
+    """
+    Used to handle the case where you want to override 
+    both a validator and a widget for a given field.
+    """
+
     def __init__(self, widget=None, validator=None):
         self.widget = widget
         self.validator = validator
 
+
 class FormBase(ViewBase):
-    """
-
+    r"""
     :Modifiers:
-
 
     Modifiers defined in this class
 
@@ -158,33 +169,31 @@ class FormBase(ViewBase):
     ...
     ValidationError
 
-
-
     """
-    __require_fields__     = None
-    __check_if_unique__    = False
+    __require_fields__ = None
+    __check_if_unique__ = False
 
-    #object overrides
-    __base_widget_type__       = TableForm
+    # object overrides
+    __base_widget_type__ = TableForm
 
     @property
     def __widget_selector_type__(self):
         return self.__provider__.default_widget_selector_type
 
-    __validator_selector__      = None
+    __validator_selector__ = None
 
     @property
     def __validator_selector_type__(self):
         return self.__provider__.default_validator_selector_type
 
-    __field_validators__       = None
-    __field_validator_types__  = None
-    __base_validator__         = FilteringSchema
+    __field_validators__ = None
+    __field_validator_types__ = None
+    __base_validator__ = FilteringSchema
 
     __metadata_type__ = FieldsMetadata
 
-    __possible_field_names__      = None
-    __dropdown_field_names__      = None
+    __possible_field_names__ = None
+    __dropdown_field_names__ = None
 
     def _do_init_attrs(self):
         super(FormBase, self)._do_init_attrs()
@@ -240,14 +249,15 @@ class FormBase(ViewBase):
         return self.__widget__.validate(params, state)
 
     def _do_get_widget_args(self):
-        """Override this method to define how the class get's the
-           arguments for the main widget
+        """
+            Override this method to define how the class get's the
+            arguments for the main widget
         """
         d = super(FormBase, self)._do_get_widget_args()
         if self.__base_validator__ is not None:
             d['validator'] = self.__base_validator__
 
-        #TW2 widgets cannot have a FormEncode Schema as validator, only plain validators instances
+        # TW2 widgets cannot have a FormEncode Schema as validator, only plain validators instances
         if hasattr(Widget, 'req'):
             current_validator = d.get('validator')
             if current_validator is FilteringSchema:
@@ -259,8 +269,11 @@ class FormBase(ViewBase):
         """Override this method do define how this class gets the field
         widget arguemnts
         """
-        args = super(FormBase, self)._do_get_field_widget_args( field_name, field)
-        v = self.__field_validators__.get(field_name, self._do_get_field_validator(field_name, field))
+        args = super(FormBase, self)._do_get_field_widget_args(field_name, field)
+        v = self.__field_validators__.get(
+            field_name,
+            self._do_get_field_validator(field_name, field)
+        )
         if self.__provider__.is_relation(self.__entity__, field_name):
             args['entity'] = self.__entity__
             args['field_name'] = field_name
@@ -339,6 +352,7 @@ class FormBase(ViewBase):
 
         return args
 
+
 class EditableForm(FormBase):
     """A form for editing a record.
     :Modifiers:
@@ -346,6 +360,7 @@ class EditableForm(FormBase):
     see :class:`sprox.formbase.FormBase`
 
     """
+
     def _do_get_disabled_fields(self):
         fields = self.__disable_fields__[:]
         fields.extend(self.__provider__.get_primary_fields(self.__entity__))
@@ -361,7 +376,7 @@ class EditableForm(FormBase):
         for primary_field in primary_fields:
             if primary_field not in fields:
                 fields.append(primary_field)
-        
+
         if '_method' not in fields:
             fields.append('_method')
 
@@ -369,14 +384,17 @@ class EditableForm(FormBase):
 
     def _do_get_field_widgets(self, fields):
         widgets = super(EditableForm, self)._do_get_field_widgets(fields)
-        widgets['_method'] = SproxMethodPutHiddenField(id='sprox_method',
-                                                       validator=UnicodeString(if_missing=None))
+        widgets['_method'] = SproxMethodPutHiddenField(
+            id='sprox_method',
+            validator=UnicodeString(if_missing=None)
+        )
         return widgets
 
     __check_if_unique__ = False
 
+
 class AddRecordForm(FormBase):
-    """An editable form who's purpose is record addition.
+    r"""An editable form who's purpose is record addition.
 
     :Modifiers:
 
@@ -472,8 +490,8 @@ class AddRecordForm(FormBase):
 
     The validation fails because there is already a user with the user_name 'asdf' in the database
 
-
     """
+
     __check_if_unique__ = True
 
     def _do_init_attrs(self):
@@ -496,7 +514,6 @@ class AddRecordForm(FormBase):
 
 class DisabledForm(FormBase):
     """A form who's set of fields is disabled.
-
 
     :Modifiers:
 
@@ -539,10 +556,10 @@ class DisabledForm(FormBase):
     </form>
 
 
-    You may notice in the above example that disabled fields pass in a hidden value for each disabled field.
+    You may notice in the above example that disabled fields 
+    pass in a hidden value for each disabled field.
 
     """
-
 
     def _do_get_disabled_fields(self):
         return self.__fields__

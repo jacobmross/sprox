@@ -1,1 +1,4 @@
-__version__ = "0.10.2"
+# -*- coding: utf-8 -*-
+# sprox.release.py
+
+__version__ = "0.11.0"

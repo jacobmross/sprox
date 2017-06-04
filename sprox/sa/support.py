@@ -1,9 +1,12 @@
+# -*- coding: utf-8 -*-
+# sprox.sa.support.py
+
 import inspect
 
 try:
     from sqlalchemy.orm import PropertyLoader
 except ImportError:
-    # Compatibility with SQLA0.9
+    # Compatibility with SQLA 0.9
     from sqlalchemy.orm import RelationshipProperty as PropertyLoader
 
 try:
@@ -33,4 +36,3 @@ def resolve_entity(entity):
     if _class_resolver is not None and isinstance(entity, _class_resolver):
         entity = entity()
     return entity
-
